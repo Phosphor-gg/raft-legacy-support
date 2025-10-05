@@ -68,9 +68,6 @@ license-files = ["LICENSE"]
 [tool.setuptools.dynamic]
 version = {file = "pylibraft/VERSION"}
 
-[tool.scikit-build]
-cmake.args = ["-DFIND_RAFT_CPP=OFF", "-DRAFT_BUILD_WHEELS=ON"]
-
 [tool.isort]
 line_length = 79
 multi_line_output = 3

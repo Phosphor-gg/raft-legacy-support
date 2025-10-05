@@ -34,7 +34,7 @@ project(
 )
 
 option(FIND_RAFT_CPP "Search for existing RAFT C++ installations before defaulting to local files"
-       ON
+       OFF
 )
 
 option(RAFT_BUILD_WHEELS "Whether this build is generating a Python wheel." OFF)
