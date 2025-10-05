@@ -290,7 +290,7 @@ cdef host_matrix_view[int64_t, int64_t, row_major] \
 
 cdef host_matrix_view[uint32_t, int64_t, row_major] \
         get_hmv_uint32(cai, check_shape) except *:
-    if cai.dtype != np.int64:
+    if cai.dtype != np.uint32:
         raise TypeError("dtype %s not supported" % cai.dtype)
     if check_shape and len(cai.shape) != 2:
         raise ValueError("Expected a 2D array, got %d D" % len(cai.shape))
