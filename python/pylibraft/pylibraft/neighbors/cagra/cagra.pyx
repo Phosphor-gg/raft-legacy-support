@@ -75,9 +75,15 @@ from pylibraft.common.mdspan cimport (
     const_float,
     const_int8_t,
     const_uint8_t,
+    get_dmv_float,
+    get_dmv_int8,
     get_dmv_int64,
+    get_dmv_uint8,
     get_dmv_uint32,
+    get_hmv_float,
+    get_hmv_int8,
     get_hmv_int64,
+    get_hmv_uint8,
     get_hmv_uint32,
     make_optional_view_int64,
 )
@@ -431,59 +437,37 @@ def build(IndexParams index_params, dataset, handle=None):
     cdef IndexInt8 idx_int8
     cdef IndexUint8 idx_uint8
 
-    cdef device_matrix_view[const_float, int64_t, row_major] dataset_view_device_float
-    cdef device_matrix_view[const_int8_t, int64_t, row_major] dataset_view_device_int8
-    cdef device_matrix_view[const_uint8_t, int64_t, row_major] dataset_view_device_uint8
-    cdef host_matrix_view[const_float, int64_t, row_major] dataset_view_host_float
-    cdef host_matrix_view[const_int8_t, int64_t, row_major] dataset_view_host_int8
-    cdef host_matrix_view[const_uint8_t, int64_t, row_major] dataset_view_host_uint8
-
     if dataset_ai.from_cai:
         if dataset_dt == np.float32:
             idx_float = IndexFloat(handle)
             idx_float.active_index_type = "float32"
-            dataset_view_device_float = make_device_matrix_view[const_float, int64_t, row_major](
-                <const float*><uintptr_t>dataset_ai.data,
-                dataset_ai.shape[0],
-                dataset_ai.shape[1]
-            )
             with cuda_interruptible():
                 c_cagra.build_device(
                     deref(handle_),
                     index_params.params,
-                    dataset_view_device_float,
+                    get_dmv_float(dataset_ai, check_shape=True),
                     deref(idx_float.index))
             idx_float.trained = True
             return idx_float
         elif dataset_dt == np.byte:
             idx_int8 = IndexInt8(handle)
             idx_int8.active_index_type = "byte"
-            dataset_view_device_int8 = make_device_matrix_view[const_int8_t, int64_t, row_major](
-                <const int8_t*><uintptr_t>dataset_ai.data,
-                dataset_ai.shape[0],
-                dataset_ai.shape[1]
-            )
             with cuda_interruptible():
                 c_cagra.build_device(
                     deref(handle_),
                     index_params.params,
-                    dataset_view_device_int8,
+                    get_dmv_int8(dataset_ai, check_shape=True),
                     deref(idx_int8.index))
             idx_int8.trained = True
             return idx_int8
         elif dataset_dt == np.ubyte:
             idx_uint8 = IndexUint8(handle)
             idx_uint8.active_index_type = "ubyte"
-            dataset_view_device_uint8 = make_device_matrix_view[const_uint8_t, int64_t, row_major](
-                <const uint8_t*><uintptr_t>dataset_ai.data,
-                dataset_ai.shape[0],
-                dataset_ai.shape[1]
-            )
             with cuda_interruptible():
                 c_cagra.build_device(
                     deref(handle_),
                     index_params.params,
-                    dataset_view_device_uint8,
+                    get_dmv_uint8(dataset_ai, check_shape=True),
                     deref(idx_uint8.index))
             idx_uint8.trained = True
             return idx_uint8
@@ -493,48 +477,33 @@ def build(IndexParams index_params, dataset, handle=None):
         if dataset_dt == np.float32:
             idx_float = IndexFloat(handle)
             idx_float.active_index_type = "float32"
-            dataset_view_host_float = make_host_matrix_view[const_float, int64_t, row_major](
-                <const float*><uintptr_t>dataset_ai.data,
-                dataset_ai.shape[0],
-                dataset_ai.shape[1]
-            )
             with cuda_interruptible():
                 c_cagra.build_host(
                     deref(handle_),
                     index_params.params,
-                    dataset_view_host_float,
+                    get_hmv_float(dataset_ai, check_shape=True),
                     deref(idx_float.index))
             idx_float.trained = True
             return idx_float
         elif dataset_dt == np.byte:
             idx_int8 = IndexInt8(handle)
             idx_int8.active_index_type = "byte"
-            dataset_view_host_int8 = make_host_matrix_view[const_int8_t, int64_t, row_major](
-                <const int8_t*><uintptr_t>dataset_ai.data,
-                dataset_ai.shape[0],
-                dataset_ai.shape[1]
-            )
             with cuda_interruptible():
                 c_cagra.build_host(
                     deref(handle_),
                     index_params.params,
-                    dataset_view_host_int8,
+                    get_hmv_int8(dataset_ai, check_shape=True),
                     deref(idx_int8.index))
             idx_int8.trained = True
             return idx_int8
         elif dataset_dt == np.ubyte:
             idx_uint8 = IndexUint8(handle)
             idx_uint8.active_index_type = "ubyte"
-            dataset_view_host_uint8 = make_host_matrix_view[const_uint8_t, int64_t, row_major](
-                <const uint8_t*><uintptr_t>dataset_ai.data,
-                dataset_ai.shape[0],
-                dataset_ai.shape[1]
-            )
             with cuda_interruptible():
                 c_cagra.build_host(
                     deref(handle_),
                     index_params.params,
-                    dataset_view_host_uint8,
+                    get_hmv_uint8(dataset_ai, check_shape=True),
                     deref(idx_uint8.index))
             idx_uint8.trained = True
             return idx_uint8
@@ -798,50 +767,32 @@ def search(SearchParams search_params,
     cdef IndexFloat idx_float
     cdef IndexInt8 idx_int8
     cdef IndexUint8 idx_uint8
-    cdef device_matrix_view[const_float, int64_t, row_major] queries_view_float
-    cdef device_matrix_view[const_int8_t, int64_t, row_major] queries_view_int8
-    cdef device_matrix_view[const_uint8_t, int64_t, row_major] queries_view_uint8
 
     if queries_dt == np.float32:
         idx_float = index
-        queries_view_float = make_device_matrix_view[const_float, int64_t, row_major](
-            <const float*><uintptr_t>queries_cai.data,
-            queries_cai.shape[0],
-            queries_cai.shape[1]
-        )
         with cuda_interruptible():
             c_cagra.search(deref(handle_),
                            params,
                            deref(idx_float.index),
-                           queries_view_float,
+                           get_dmv_float(queries_cai, check_shape=True),
                            get_dmv_uint32(neighbors_cai, check_shape=True),
                            get_dmv_float(distances_cai, check_shape=True))
     elif queries_dt == np.byte:
         idx_int8 = index
-        queries_view_int8 = make_device_matrix_view[const_int8_t, int64_t, row_major](
-            <const int8_t*><uintptr_t>queries_cai.data,
-            queries_cai.shape[0],
-            queries_cai.shape[1]
-        )
         with cuda_interruptible():
             c_cagra.search(deref(handle_),
                            params,
                            deref(idx_int8.index),
-                           queries_view_int8,
+                           get_dmv_int8(queries_cai, check_shape=True),
                            get_dmv_uint32(neighbors_cai, check_shape=True),
                            get_dmv_float(distances_cai, check_shape=True))
     elif queries_dt == np.ubyte:
         idx_uint8 = index
-        queries_view_uint8 = make_device_matrix_view[const_uint8_t, int64_t, row_major](
-            <const uint8_t*><uintptr_t>queries_cai.data,
-            queries_cai.shape[0],
-            queries_cai.shape[1]
-        )
         with cuda_interruptible():
             c_cagra.search(deref(handle_),
                            params,
                            deref(idx_uint8.index),
-                           queries_view_uint8,
+                           get_dmv_uint8(queries_cai, check_shape=True),
                            get_dmv_uint32(neighbors_cai, check_shape=True),
                            get_dmv_float(distances_cai, check_shape=True))
     else:
