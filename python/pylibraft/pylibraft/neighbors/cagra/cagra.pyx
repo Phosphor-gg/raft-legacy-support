@@ -434,6 +434,9 @@ def build(IndexParams index_params, dataset, handle=None):
     cdef device_matrix_view[const_float, int64_t, row_major] dataset_view_device_float
     cdef device_matrix_view[const_int8_t, int64_t, row_major] dataset_view_device_int8
     cdef device_matrix_view[const_uint8_t, int64_t, row_major] dataset_view_device_uint8
+    cdef host_matrix_view[const_float, int64_t, row_major] dataset_view_host_float
+    cdef host_matrix_view[const_int8_t, int64_t, row_major] dataset_view_host_int8
+    cdef host_matrix_view[const_uint8_t, int64_t, row_major] dataset_view_host_uint8
 
     if dataset_ai.from_cai:
         if dataset_dt == np.float32:
@@ -487,10 +490,6 @@ def build(IndexParams index_params, dataset, handle=None):
         else:
             raise TypeError("dtype %s not supported" % dataset_dt)
     else:
-        cdef host_matrix_view[const_float, int64_t, row_major] dataset_view_host_float
-        cdef host_matrix_view[const_int8_t, int64_t, row_major] dataset_view_host_int8
-        cdef host_matrix_view[const_uint8_t, int64_t, row_major] dataset_view_host_uint8
-
         if dataset_dt == np.float32:
             idx_float = IndexFloat(handle)
             idx_float.active_index_type = "float32"
