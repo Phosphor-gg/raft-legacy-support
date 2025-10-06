@@ -65,19 +65,19 @@ from pylibraft.neighbors.common import _check_input_array, _get_metric
 from pylibraft.common.cpp.mdspan cimport (
     device_matrix_view,
     device_vector_view,
+    host_matrix_view,
+    make_device_matrix_view,
     make_device_vector_view,
+    make_host_matrix_view,
     row_major,
 )
 from pylibraft.common.mdspan cimport (
-    get_dmv_float,
-    get_dmv_int8,
+    const_float,
+    const_int8_t,
+    const_uint8_t,
     get_dmv_int64,
-    get_dmv_uint8,
     get_dmv_uint32,
-    get_hmv_float,
-    get_hmv_int8,
     get_hmv_int64,
-    get_hmv_uint8,
     get_hmv_uint32,
     make_optional_view_int64,
 )
@@ -179,14 +179,23 @@ cdef class IndexFloat(Index):
         dataset_dt = dataset_ai.dtype
         _check_input_array(dataset_ai, [np.dtype("float32")])
 
+        cdef device_matrix_view[const_float, int64_t, row_major] dataset_view_device
+        cdef host_matrix_view[const_float, int64_t, row_major] dataset_view_host
+
         if dataset_ai.from_cai:
-            self.index[0].update_dataset(deref(handle_),
-                                         get_dmv_float(dataset_ai,
-                                                             check_shape=True))
+            dataset_view_device = make_device_matrix_view[const_float, int64_t, row_major](
+                <const float*><uintptr_t>dataset_ai.data,
+                dataset_ai.shape[0],
+                dataset_ai.shape[1]
+            )
+            self.index[0].update_dataset(deref(handle_), dataset_view_device)
         else:
-            self.index[0].update_dataset(deref(handle_),
-                                         get_hmv_float(dataset_ai,
-                                                             check_shape=True))
+            dataset_view_host = make_host_matrix_view[const_float, int64_t, row_major](
+                <const float*><uintptr_t>dataset_ai.data,
+                dataset_ai.shape[0],
+                dataset_ai.shape[1]
+            )
+            self.index[0].update_dataset(deref(handle_), dataset_view_host)
 
     @property
     def metric(self):
@@ -237,14 +246,23 @@ cdef class IndexInt8(Index):
         dataset_dt = dataset_ai.dtype
         _check_input_array(dataset_ai, [np.dtype("byte")])
 
+        cdef device_matrix_view[const_int8_t, int64_t, row_major] dataset_view_device
+        cdef host_matrix_view[const_int8_t, int64_t, row_major] dataset_view_host
+
         if dataset_ai.from_cai:
-            self.index[0].update_dataset(deref(handle_),
-                                         get_dmv_int8(dataset_ai,
-                                                            check_shape=True))
+            dataset_view_device = make_device_matrix_view[const_int8_t, int64_t, row_major](
+                <const int8_t*><uintptr_t>dataset_ai.data,
+                dataset_ai.shape[0],
+                dataset_ai.shape[1]
+            )
+            self.index[0].update_dataset(deref(handle_), dataset_view_device)
         else:
-            self.index[0].update_dataset(deref(handle_),
-                                         get_hmv_int8(dataset_ai,
-                                                            check_shape=True))
+            dataset_view_host = make_host_matrix_view[const_int8_t, int64_t, row_major](
+                <const int8_t*><uintptr_t>dataset_ai.data,
+                dataset_ai.shape[0],
+                dataset_ai.shape[1]
+            )
+            self.index[0].update_dataset(deref(handle_), dataset_view_host)
 
     def __repr__(self):
         m_str = "metric=" + _get_metric_string(self.index.metric())
@@ -302,14 +320,23 @@ cdef class IndexUint8(Index):
         dataset_dt = dataset_ai.dtype
         _check_input_array(dataset_ai, [np.dtype("ubyte")])
 
+        cdef device_matrix_view[const_uint8_t, int64_t, row_major] dataset_view_device
+        cdef host_matrix_view[const_uint8_t, int64_t, row_major] dataset_view_host
+
         if dataset_ai.from_cai:
-            self.index[0].update_dataset(deref(handle_),
-                                         get_dmv_uint8(dataset_ai,
-                                                             check_shape=True))
+            dataset_view_device = make_device_matrix_view[const_uint8_t, int64_t, row_major](
+                <const uint8_t*><uintptr_t>dataset_ai.data,
+                dataset_ai.shape[0],
+                dataset_ai.shape[1]
+            )
+            self.index[0].update_dataset(deref(handle_), dataset_view_device)
         else:
-            self.index[0].update_dataset(deref(handle_),
-                                         get_hmv_uint8(dataset_ai,
-                                                             check_shape=True))
+            dataset_view_host = make_host_matrix_view[const_uint8_t, int64_t, row_major](
+                <const uint8_t*><uintptr_t>dataset_ai.data,
+                dataset_ai.shape[0],
+                dataset_ai.shape[1]
+            )
+            self.index[0].update_dataset(deref(handle_), dataset_view_host)
 
     def __repr__(self):
         m_str = "metric=" + _get_metric_string(self.index.metric())
